@@ -1,0 +1,15 @@
+[package]
+name = "playground"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/SzilvasiPeter/focusmini"
+readme = "README.md"
+keywords = ["pomodoro", "timer", "cli", "productivity"]
+categories = ["command-line-utilities", "date-and-time"]
+description = "Simple Pomodoro timer with audio cues"
+
+[dependencies]
+rodio = "0.21"
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
