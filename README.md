@@ -5,4 +5,3 @@ Plain Pomodoro timer CLI with audio cues.
 - no dependence on the `BEL` sound
 
 # Installation
--
