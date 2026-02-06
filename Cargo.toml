@@ -1,6 +1,6 @@
 [package]
 name = "focusmini"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/SzilvasiPeter/focusmini"
@@ -11,7 +11,7 @@ description = "Simple Pomodoro timer with audio cues"
 
 [dependencies]
 rodio = { version = "0.21", default-features = false, features = ["playback"] }
-clap = { version = "4.5", default-features = false, features = ["std", "derive"] }
+clap = { version = "4.5", default-features = false, features = ["std", "derive", "help"] }
 
 [profile.release]
 opt-level = "z"
