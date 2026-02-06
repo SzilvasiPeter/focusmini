@@ -1,5 +1,5 @@
 [package]
-name = "playground"
+name = "focusmini"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
@@ -10,6 +10,12 @@ categories = ["command-line-utilities", "date-and-time"]
 description = "Simple Pomodoro timer with audio cues"
 
 [dependencies]
-rodio = "0.21"
-clap = { version = "4.5", features = ["derive"] }
-anyhow = "1.0"
+rodio = { version = "0.21", default-features = false, features = ["playback"] }
+clap = { version = "4.5", default-features = false, features = ["std", "derive"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"

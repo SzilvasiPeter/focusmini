@@ -1,83 +1,67 @@
 use clap::Parser;
 use rodio::{OutputStreamBuilder, Sink, Source, source::SineWave};
 use std::io::{self, Write, stdin, stdout};
-use std::thread::sleep;
 use std::time::Duration;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Config {
     #[arg(short = 'w', long = "work", default_value_t = 60)]
-    work_minutes: u64,
+    work_minutes: u16,
     #[arg(short = 'b', long = "break", default_value_t = 10)]
-    break_minutes: u64,
+    break_minutes: u16,
+    #[arg(short = 'a', long = "amplify", default_value_t = 1.0)]
+    amplify: f32,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::parse();
     let work_seconds = config.work_minutes * 60;
     let break_seconds = config.break_minutes * 60;
     let work = ("\x1b[1m [Work] \x1b[0m", work_seconds);
     let pause = ("\x1b[1m [Break] \x1b[0m", break_seconds);
-
-    loop {
-        for (label, seconds) in [work, pause] {
-            countdown(label, seconds)?;
-            beep()?;
-            if !confirm_continue()? {
-                return Ok(());
-            }
-        }
-    }
-}
-
-fn countdown(label: &str, seconds: u64) -> io::Result<()> {
-    for remaining in (1..=seconds).rev() {
-        let timer = format!("{label} {:02}:{:02}", remaining / 60, remaining % 60);
-        reset_line(&timer)?;
-        sleep(Duration::from_secs(1));
-    }
-
-    let finished = format!("{label} 00:00");
-    reset_line(&finished)?;
-
-    Ok(())
-}
-
-fn beep() -> anyhow::Result<(), rodio::StreamError> {
-    let mut stream = OutputStreamBuilder::open_default_stream()?;
-    let sink = Sink::connect_new(stream.mixer());
-
-    sink.append(SineWave::new(800.0).take_duration(Duration::from_millis(300)));
-    sink.append(SineWave::new(1.0).take_duration(Duration::from_millis(300)));
-    sink.append(SineWave::new(800.0).take_duration(Duration::from_millis(300)));
-
-    sink.sleep_until_end();
-    stream.log_on_drop(false);
-
-    Ok(())
-}
-
-fn confirm_continue() -> io::Result<bool> {
-    loop {
-        reset_line("Enter `n` to continue or `q` to exit: ")?;
+    for (label, seconds) in [work, pause].into_iter().cycle() {
+        countdown(label, seconds)?;
+        beep(config.amplify)?;
 
         let mut input = String::new();
+        print_flush("\rPress Enter to continue or type `q` to quit: ")?;
         stdin().read_line(&mut input)?;
-
-        let clear_query = format!("\x1B[1A\r{:<80}\r", "");
-        reset_line(&clear_query)?;
-
-        match input.chars().next() {
-            Some('n') => return Ok(true),
-            Some('q') => return Ok(false),
-            _ => {}
+        if matches!(input.chars().next(), Some('q')) {
+            break;
         }
+
+        print_flush("\x1B[1A\x1B[2K")?; // move up and clear line
     }
+
+    Ok(())
 }
 
-fn reset_line(text: &str) -> io::Result<()> {
-    print!("\r{text}");
+fn countdown(label: &str, seconds: u16) -> io::Result<()> {
+    for sec in (1..=seconds).rev() {
+        print_flush(&format!("\r{label} {:02}:{:02}", sec / 60, sec % 60))?;
+        std::thread::sleep(Duration::from_secs(1));
+    }
+
+    print_flush(&format!("\r{label} 00:00"))?;
+    Ok(())
+}
+
+fn beep(volume: f32) -> Result<(), rodio::StreamError> {
+    let mut stream = OutputStreamBuilder::open_default_stream()?;
+    stream.log_on_drop(false);
+
+    let sink = Sink::connect_new(stream.mixer());
+    let duration = Duration::from_millis(300);
+    sink.append(SineWave::new(500.0).amplify(volume).take_duration(duration));
+    sink.append(SineWave::new(1.0).amplify(volume).take_duration(duration));
+    sink.append(SineWave::new(500.0).amplify(volume).take_duration(duration));
+    sink.sleep_until_end();
+    Ok(())
+}
+
+fn print_flush(text: &str) -> io::Result<()> {
+    print!("{text}");
     stdout().flush()?;
     Ok(())
 }
