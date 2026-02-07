@@ -1,33 +1,20 @@
 #![forbid(unsafe_code)]
-
-use clap::Parser;
-use rodio::{OutputStreamBuilder, Sink, Source, StreamError, source::SineWave};
 use std::io::{self, Write, stdin, stdout};
+use std::process::Command;
 use std::time::Duration;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about)]
-pub struct Config {
-    #[arg(short = 'w', long = "work", default_value_t = 60)]
-    pub work_minutes: u16,
-    #[arg(short = 'b', long = "break", default_value_t = 10)]
-    pub break_minutes: u16,
-    #[arg(short = 'a', long = "amplify", default_value_t = 1.0)]
-    pub amplify: f32,
-}
-
-pub fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
-    let work_seconds = config.work_minutes * 60;
-    let break_seconds = config.break_minutes * 60;
+pub fn run(work_minutes: u16, break_minutes: u16) -> io::Result<()> {
+    let work_seconds = work_minutes;
+    let break_seconds = break_minutes;
     let work = ("\x1b[1m [Work] \x1b[0m", work_seconds);
     let pause = ("\x1b[1m [Break] \x1b[0m", break_seconds);
 
     for (label, seconds) in [work, pause].into_iter().cycle() {
         countdown(label, seconds)?;
-        beep(config.amplify)?;
+        notify()?;
 
         let mut input = String::new();
-        print_flush("\rPress Enter to continue or type `q` to quit: ")?;
+        print_flush("\rEnter to continue (q to quit): ")?;
         stdin().read_line(&mut input)?;
         if matches!(input.chars().next(), Some('q')) {
             break;
@@ -49,17 +36,15 @@ pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     Ok(())
 }
 
-pub fn beep(volume: f32) -> Result<(), StreamError> {
-    let mut stream = OutputStreamBuilder::open_default_stream()?;
-    stream.log_on_drop(false);
-
-    let sink = Sink::connect_new(stream.mixer());
-    let duration = Duration::from_millis(300);
-    sink.append(SineWave::new(500.0).amplify(volume).take_duration(duration));
-    sink.append(SineWave::new(1.0).amplify(volume).take_duration(duration));
-    sink.append(SineWave::new(500.0).amplify(volume).take_duration(duration));
-    sink.sleep_until_end();
-    Ok(())
+pub fn notify() -> io::Result<()> {
+    let status = Command::new("paplay")
+        .arg("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga")
+        .status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other("paplay failed"))
+    }
 }
 
 pub fn print_flush(text: &str) -> io::Result<()> {

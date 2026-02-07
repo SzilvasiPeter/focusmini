@@ -1,7 +1,5 @@
-use clap::Parser;
-use focusmini::{Config, run};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::parse();
-    run(config)
+fn main() -> std::io::Result<()> {
+    let work_minutes = 3;
+    let break_minutes = 1;
+    focusmini::run(work_minutes, break_minutes)
 }
