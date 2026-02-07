@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-use std::io::{self, Write, stdin, stdout};
+use std::io::{self, BufRead, Write, stdout};
 
 pub trait Notifier {
     fn run(&self) -> io::Result<()>;
@@ -31,20 +31,21 @@ pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
     value.parse::<u16>().map_err(|_| error)
 }
 
-pub fn run(work_minutes: u16, break_minutes: u16, notifier: &dyn Notifier) -> io::Result<()> {
-    let work_seconds = work_minutes * 60;
-    let break_seconds = break_minutes * 60;
-    let work = ("\x1b[1m [Work] \x1b[0m", work_seconds);
-    let pause = ("\x1b[1m [Break] \x1b[0m", break_seconds);
+pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
+    let work_secs = work * 60;
+    let break_secs = brk * 60;
+    let work = ("\x1b[1m [Work] \x1b[0m", work_secs);
+    let pause = ("\x1b[1m [Break] \x1b[0m", break_secs);
 
+    let mut input_line = String::new();
     for (label, seconds) in [work, pause].into_iter().cycle() {
         countdown(label, seconds)?;
-        notifier.run()?;
+        alarm.run()?;
 
-        let mut input = String::new();
         print_flush("\rEnter to continue (q to quit): ")?;
-        stdin().read_line(&mut input)?;
-        if matches!(input.chars().next(), Some('q')) {
+        input_line.clear();
+        input.read_line(&mut input_line)?;
+        if matches!(input_line.chars().next(), Some('q')) {
             break;
         }
 

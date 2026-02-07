@@ -10,11 +10,13 @@ impl focusmini::Notifier for Paplay {
 }
 
 fn main() -> std::io::Result<()> {
+    let stdin = std::io::stdin();
+    let mut locked = stdin.lock();
     match focusmini::parse_args(std::env::args()) {
-        Ok((work_minutes, break_minutes)) => focusmini::run(work_minutes, break_minutes, &Paplay),
+        Ok((work, brk)) => focusmini::run(work, brk, &Paplay, &mut locked),
         Err(msg) => {
             eprintln!("Argument warning: {}. Using default timers.", msg);
-            focusmini::run(60, 10, &Paplay)
+            focusmini::run(60, 10, &Paplay, &mut locked)
         }
     }
 }
