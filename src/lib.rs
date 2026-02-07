@@ -1,7 +1,8 @@
 #![forbid(unsafe_code)]
 use std::io::{self, Write, stdin, stdout};
 
-pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
+pub fn parse_args(mut args: std::env::Args) -> Result<(u16, u16), String> {
+    args.next();
     let mut work = 60;
     let mut rest = 10;
 
