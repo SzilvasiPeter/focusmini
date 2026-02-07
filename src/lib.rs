@@ -37,14 +37,10 @@ pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
 }
 
 pub fn notify() -> io::Result<()> {
-    let status = Command::new("paplay")
-        .arg("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga")
-        .status()?;
-    if status.success() {
-        Ok(())
-    } else {
-        Err(io::Error::other("paplay failed"))
-    }
+    let alarm = "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
+    let status = Command::new("paplay").arg(alarm).status()?;
+    let err = io::Error::other("paplay failed");
+    status.success().then(|| ()).ok_or_else(|| err)
 }
 
 pub fn print_flush(text: &str) -> io::Result<()> {

@@ -11,29 +11,18 @@ fn main() -> std::io::Result<()> {
 fn parse_args() -> Result<(u16, u16), String> {
     let mut work = 60;
     let mut rest = 10;
-    let args = std::env::args().skip(1).collect::<Vec<_>>();
+    let mut args = std::env::args().skip(1);
+    let parse_value = |flag: &str, value: &str| {
+        let error = format!("invalid value for {}", flag);
+        value.parse::<u16>().map_err(|_| error)
+    };
 
-    for chunk in args.chunks(2) {
-        let (flag, value) = match chunk {
-            [flag, value] => (flag, value),
-            [flag] => return Err(format!("missing value for {}", flag)),
-            _ => continue,
-        };
+    while let Some(flag) = args.next() {
+        let error = format!("missing value for {}", flag);
+        let value = args.next().ok_or_else(|| error)?;
         match flag.as_str() {
-            "-w" | "--work" => {
-                let parsed = match value.parse::<u16>() {
-                    Ok(value) => value,
-                    Err(_) => return Err(format!("invalid value for {}", flag)),
-                };
-                work = parsed;
-            }
-            "-b" | "--break" => {
-                let parsed = match value.parse::<u16>() {
-                    Ok(value) => value,
-                    Err(_) => return Err(format!("invalid value for {}", flag)),
-                };
-                rest = parsed;
-            }
+            "-w" | "--work" => work = parse_value(&flag, &value)?,
+            "-b" | "--break" => rest = parse_value(&flag, &value)?,
             _ => {}
         }
     }
