@@ -5,7 +5,10 @@ pub trait Notifier {
     fn run(&self) -> io::Result<()>;
 }
 
-pub fn parse_args(mut args: std::env::Args) -> Result<(u16, u16), String> {
+pub fn parse_args<I>(mut args: I) -> Result<(u16, u16), String>
+where
+    I: Iterator<Item = String>,
+{
     args.next();
     let mut work = 60;
     let mut rest = 10;
