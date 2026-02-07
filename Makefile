@@ -1,4 +1,4 @@
-.PHONY: build run lint
+.PHONY: build run lint security
 
 BINARY := target/release/focusmini
 
@@ -11,6 +11,8 @@ run: build
 
 lint: build
 	cargo clippy --release --all-targets -- -W clippy::all
+
+sec: build
 	cargo audit
 	cargo deny check
 	cargo +nightly udeps --release
