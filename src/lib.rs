@@ -1,6 +1,10 @@
 #![forbid(unsafe_code)]
 use std::io::{self, Write, stdin, stdout};
 
+pub trait Notifier {
+    fn run(&self) -> io::Result<()>;
+}
+
 pub fn parse_args(mut args: std::env::Args) -> Result<(u16, u16), String> {
     args.next();
     let mut work = 60;
@@ -24,7 +28,7 @@ pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
     value.parse::<u16>().map_err(|_| error)
 }
 
-pub fn run(work_minutes: u16, break_minutes: u16) -> io::Result<()> {
+pub fn run(work_minutes: u16, break_minutes: u16, notifier: &dyn Notifier) -> io::Result<()> {
     let work_seconds = work_minutes * 60;
     let break_seconds = break_minutes * 60;
     let work = ("\x1b[1m [Work] \x1b[0m", work_seconds);
@@ -32,7 +36,7 @@ pub fn run(work_minutes: u16, break_minutes: u16) -> io::Result<()> {
 
     for (label, seconds) in [work, pause].into_iter().cycle() {
         countdown(label, seconds)?;
-        notify()?;
+        notifier.run()?;
 
         let mut input = String::new();
         print_flush("\rEnter to continue (q to quit): ")?;
@@ -55,13 +59,6 @@ pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
 
     print_flush(&format!("\r{label} 00:00"))?;
     Ok(())
-}
-
-pub fn notify() -> io::Result<()> {
-    let alarm = "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
-    let status = std::process::Command::new("paplay").arg(alarm).status()?;
-    let err = io::Error::other("paplay failed");
-    status.success().then_some(()).ok_or(err)
 }
 
 pub fn print_flush(text: &str) -> io::Result<()> {
