@@ -9,13 +9,16 @@ build:
 run: build
 	$(BINARY)
 
-lint: build
+lint:
 	cargo clippy --release --all-targets -- -W clippy::all
 
-sec: build
+sec:
 	cargo audit
 	cargo deny check
 	cargo +nightly udeps --release
 
 test:
-	cargo test --release
+	cargo test --release --features fast-tick
+
+cov:
+	cargo tarpaulin --features fast-tick

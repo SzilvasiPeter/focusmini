@@ -1,6 +1,20 @@
 #![forbid(unsafe_code)]
 use std::io::{self, BufRead, Write, stdout};
 
+use std::time::Duration;
+
+#[cfg(feature = "fast-tick")]
+const SECONDS_PER_MINUTE: u16 = 1;
+
+#[cfg(not(feature = "fast-tick"))]
+const SECONDS_PER_MINUTE: u16 = 60;
+
+#[cfg(feature = "fast-tick")]
+const TICK_DURATION: Duration = Duration::from_millis(1);
+
+#[cfg(not(feature = "fast-tick"))]
+const TICK_DURATION: Duration = Duration::from_secs(1);
+
 pub trait Notifier {
     fn run(&self) -> io::Result<()>;
 }
@@ -19,7 +33,7 @@ where
         match flag.as_str() {
             "-w" | "--work" => work = parse_value(flag.as_str(), value.as_str())?,
             "-b" | "--break" => rest = parse_value(flag.as_str(), value.as_str())?,
-            _ => {}
+            _ => drop(flag),
         }
     }
 
@@ -32,8 +46,8 @@ pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
 }
 
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
-    let work_secs = work * 60;
-    let break_secs = brk * 60;
+    let work_secs = work * SECONDS_PER_MINUTE;
+    let break_secs = brk * SECONDS_PER_MINUTE;
     let work = ("\x1b[1m [Work] \x1b[0m", work_secs);
     let pause = ("\x1b[1m [Break] \x1b[0m", break_secs);
 
@@ -58,7 +72,7 @@ pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -
 pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     for sec in (1..=seconds).rev() {
         print_flush(&format!("\r{label} {:02}:{:02}", sec / 60, sec % 60))?;
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::thread::sleep(TICK_DURATION);
     }
 
     print_flush(&format!("\r{label} 00:00"))?;

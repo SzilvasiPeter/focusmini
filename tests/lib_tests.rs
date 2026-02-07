@@ -93,6 +93,24 @@ fn run_stops_on_q_input() {
 }
 
 #[test]
+fn run_continues_after_enter_before_quit() {
+    let mut input = Cursor::new("\nq\n".as_bytes());
+    assert!(run(0, 0, &OkNotifier, &mut input).is_ok());
+}
+
+#[test]
+fn countdown_one_second() {
+    assert!(countdown("test", 1).is_ok());
+}
+
+#[cfg(feature = "fast-tick")]
+#[test]
+fn run_one_second_work_triggers_clear_line() {
+    let mut input = Cursor::new("\nq\n".as_bytes());
+    assert!(run(1, 0, &OkNotifier, &mut input).is_ok());
+}
+
+#[test]
 fn print_flush_accepts_text() {
     assert!(print_flush("label").is_ok());
 }

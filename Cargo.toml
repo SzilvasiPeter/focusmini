@@ -11,6 +11,8 @@ description = "Simple Pomodoro timer with audio cues"
 
 [dependencies]
 
+[features]
+fast-tick = []
 [profile.release]
 opt-level = "z"
 lto = true
