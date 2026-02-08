@@ -9,6 +9,10 @@ repository = "https://github.com/SzilvasiPeter/focusmini"
 keywords = ["pomodoro", "timer", "cli", "productivity", "zero-dependency"]
 categories = ["command-line-utilities", "date-and-time"]
 
+[dev-dependencies]
+serial_test = "2"
+tempfile = "3"
+
 [features]
 fast-tick = []
 
@@ -18,7 +22,3 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = "debuginfo"
-
-[dev-dependencies]
-serial_test = "2"
-tempfile = "3"
