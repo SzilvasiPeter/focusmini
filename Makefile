@@ -15,6 +15,7 @@ lint:
 sec:
 	cargo audit
 	cargo deny check
+	cargo geiger
 	cargo +nightly udeps --release
 
 test:
