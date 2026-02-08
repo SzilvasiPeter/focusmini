@@ -12,14 +12,14 @@ run: build
 lint:
 	cargo clippy --release --all-targets -- -W clippy::all
 
+test:
+	cargo test --release --all-targets --features fast-tick
+
+cov:
+	cargo tarpaulin --all-targets --features fast-tick
+
 sec:
 	cargo audit
 	cargo deny check
 	cargo geiger
-	cargo +nightly udeps --release
-
-test:
-	cargo test --release --features fast-tick
-
-cov:
-	cargo tarpaulin --features fast-tick
+	cargo +nightly udeps --release --all-targets

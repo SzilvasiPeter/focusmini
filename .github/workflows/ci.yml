@@ -13,30 +13,27 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Setup stable toolchain with cache
+        uses: moonrepo/setup-rust@v1
         with:
+          channel: stable
           components: clippy
+          cache: true
+          bins: cargo-audit,cargo-deny,cargo-geiger
 
-      - name: Install nightly toolchain
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Setup nightly toolchain with cache
+        uses: moonrepo/setup-rust@v1
         with:
+          channel: nightly
           components: clippy
-
-      - name: Install auditing tools
-        run: |
-          cargo install --locked \
-            cargo-audit \
-            cargo-deny \
-            cargo-geiger \
-            cargo-udeps \
-            cargo-tarpaulin
+          cache: true
+          bins: cargo-udeps,cargo-tarpaulin
 
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::all
 
       - name: Run tests
-        run: cargo test --all-targets --all-features
+        run: cargo test --all-targets --features fast-tick
 
       - name: Run cargo audit
         run: cargo audit
@@ -44,11 +41,11 @@ jobs:
       - name: Run cargo deny
         run: cargo deny check
 
-      - name: Run cargo udeps
-        run: cargo +nightly udeps --all-targets
-
       - name: Run cargo geiger
         run: cargo geiger --warning
 
+      - name: Run cargo udeps
+        run: cargo +nightly udeps --all-targets
+
       - name: Run tarpaulin
-        run: cargo +nightly tarpaulin --log-level info
+        run: cargo +nightly tarpaulin --all-targets --features fast-tick --log-level info
