@@ -1,9 +1,18 @@
-Focusmini is a compact Pomodoro CLI that alternates between work/break intervals, play alarm sound on transitions.
+# focusmini
 
-- ~80 lines of code
-- small >500KB binary
-- no external dependencies
-- no unsafe call
+Focusmini is a compact Pomodoro CLI that alternates between work and break intervals while triggering an audio cue on each transition.
+
+> [!WARNING]
+> This CLI only works on Linux because the notifier launches the `paplay` command and plays `/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga` sound.
+
+- ~100 lines of Rust
+- small < 500 KiB release binary
+- no external dependencies (std-only)
+- zero unsafe code, 100% lib test cov
+
+## Usage
+
+Run the `focusmini` with the deafult values or change them with options:
 
 ```
 Usage: focusmini [OPTIONS]
@@ -13,4 +22,15 @@ Options:
   -b, --break <break_minutes>   Break interval length in minutes [default: 10]
 ```
 
-Adjust the flags if you need shorter intervals.
+## Commands
+
+The table summary of the make commands:
+
+| Make Target | Description |
+|-------------|-------------|
+| `make build` | Build the release binary and strip it. |
+| `make run` | Build and execute the release binary. |
+| `make lint` | Run Clippy in release mode against all targets with `clippy::all`. |
+| `make test` | Run tests with the `fast-tick` feature in release mode. |
+| `make cov` | Run test coverage with `cargo tarpaulin` command. |
+| `make sec` | Run `cargo audit`, `cargo deny check`, and `cargo +nightly udeps --release`. |

@@ -4,13 +4,7 @@ use std::io::{self, BufRead, Write, stdout};
 use std::time::Duration;
 
 #[cfg(feature = "fast-tick")]
-const SECONDS_PER_MINUTE: u16 = 1;
-
-#[cfg(not(feature = "fast-tick"))]
-const SECONDS_PER_MINUTE: u16 = 60;
-
-#[cfg(feature = "fast-tick")]
-const TICK_DURATION: Duration = Duration::from_millis(1);
+const TICK_DURATION: Duration = Duration::ZERO;
 
 #[cfg(not(feature = "fast-tick"))]
 const TICK_DURATION: Duration = Duration::from_secs(1);
@@ -19,10 +13,7 @@ pub trait Notifier {
     fn run(&self) -> io::Result<()>;
 }
 
-pub fn parse_args<I>(mut args: I) -> Result<(u16, u16), String>
-where
-    I: Iterator<Item = String>,
-{
+pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     args.next();
     let mut work = 60;
     let mut rest = 10;
@@ -46,8 +37,8 @@ pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
 }
 
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
-    let work_secs = work * SECONDS_PER_MINUTE;
-    let break_secs = brk * SECONDS_PER_MINUTE;
+    let work_secs = work * 60;
+    let break_secs = brk * 60;
     let work = ("\x1b[1m [Work] \x1b[0m", work_secs);
     let pause = ("\x1b[1m [Break] \x1b[0m", break_secs);
 

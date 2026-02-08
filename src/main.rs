@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 pub struct Paplay;
 
 impl focusmini::Notifier for Paplay {
@@ -10,8 +11,7 @@ impl focusmini::Notifier for Paplay {
 }
 
 fn main() -> std::io::Result<()> {
-    let stdin = std::io::stdin();
-    let mut locked = stdin.lock();
+    let mut locked = std::io::stdin().lock();
     match focusmini::parse_args(std::env::args()) {
         Ok((work, brk)) => focusmini::run(work, brk, &Paplay, &mut locked),
         Err(msg) => {
