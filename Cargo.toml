@@ -1,6 +1,6 @@
 [package]
 name = "focusmini"
-version = "1.2.3"
+version = "1.2.4"
 edition = "2024"
 license = "MIT"
 description = "Simple Pomodoro timer with audio cues"
