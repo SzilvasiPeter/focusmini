@@ -31,8 +31,9 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
 }
 
 pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
-    let error = format!("invalid value for {}", flag);
-    value.parse::<u16>().map_err(|_| error)
+    value
+        .parse::<u16>()
+        .map_err(|_| format!("invalid value for {}", flag))
 }
 
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {

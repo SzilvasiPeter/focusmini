@@ -4,10 +4,12 @@ pub struct APlayer(&'static str);
 
 impl focusmini::Notifier for APlayer {
     fn run(&self) -> std::io::Result<()> {
-        let alarm = "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
-        let status = std::process::Command::new(self.0).arg(alarm).status()?;
-        let err = std::io::Error::other(format!("{} failed", self.0));
-        status.success().then_some(()).ok_or(err)
+        std::process::Command::new(self.0)
+            .arg("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga")
+            .status()?
+            .success()
+            .then_some(())
+            .ok_or(std::io::Error::other(format!("{} failed", self.0)))
     }
 }
 

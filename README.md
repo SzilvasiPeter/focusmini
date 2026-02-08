@@ -2,7 +2,7 @@
 
 Focusmini is a compact Pomodoro CLI that alternates between work and break intervals while triggering an audio cue on each transition.
 
-> [!WARNING]
+> [!NOTE]
 > Only works on Linux since it calls `pw-play` or `paplay` to play the Freedesktop alarm sound.
 
 - ~100 LOC production code
