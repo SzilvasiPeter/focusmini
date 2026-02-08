@@ -3,7 +3,7 @@
 Focusmini is a compact Pomodoro CLI that alternates between work and break intervals while triggering an audio cue on each transition.
 
 > [!WARNING]
-> This CLI only works on Linux because the notifier launches the `paplay` command and plays `/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga` sound.
+> This CLI works only on Linux because the it runs the `pw-play` or `paplay` command and plays `/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga` sound.
 
 - ~100 lines of Rust
 - small < 500 KiB release binary

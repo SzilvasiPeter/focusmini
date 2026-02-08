@@ -1,8 +1,10 @@
-#![forbid(unsafe_code)]
-
 use std::io::{self, Cursor};
+use std::path::Path;
 
-use focusmini::{Notifier, countdown, parse_args, parse_value, print_flush, run};
+use serial_test::serial;
+use tempfile::tempdir;
+
+use focusmini::{available_audio_player, countdown, parse_args, parse_value, print_flush, run};
 
 fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
     values.iter().map(|v| v.to_string())
@@ -65,7 +67,7 @@ fn countdown_zero_seconds_runs_quickly() {
 
 struct ErrorNotifier;
 
-impl Notifier for ErrorNotifier {
+impl focusmini::Notifier for ErrorNotifier {
     fn run(&self) -> io::Result<()> {
         Err(io::Error::other("not ready"))
     }
@@ -73,7 +75,7 @@ impl Notifier for ErrorNotifier {
 
 struct OkNotifier;
 
-impl Notifier for OkNotifier {
+impl focusmini::Notifier for OkNotifier {
     fn run(&self) -> io::Result<()> {
         Ok(())
     }
@@ -113,4 +115,47 @@ fn run_one_second_work_triggers_clear_line() {
 #[test]
 fn print_flush_accepts_text() {
     assert!(print_flush("label").is_ok());
+}
+
+// The `with_path` mutates `PATH`, so the audio-player tests must run serially to avoid cross-test interference.
+fn with_path(path: &Path, f: impl FnOnce()) {
+    let prev = std::env::var_os("PATH");
+    unsafe { std::env::set_var("PATH", path) };
+    f();
+    match prev {
+        Some(val) => unsafe { std::env::set_var("PATH", val) },
+        None => unsafe { std::env::remove_var("PATH") },
+    }
+}
+
+#[test]
+#[serial]
+fn available_audio_player_returns_pw_play_when_present() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("pw-play"), b"").unwrap();
+    with_path(dir.path(), || {
+        assert_eq!(available_audio_player().unwrap(), "pw-play")
+    });
+}
+
+#[test]
+#[serial]
+fn available_audio_player_returns_paplay_when_pw_play_missing() {
+    let dir = tempdir().unwrap();
+    std::fs::write(dir.path().join("paplay"), b"").unwrap();
+    with_path(dir.path(), || {
+        assert_eq!(available_audio_player().unwrap(), "paplay")
+    });
+}
+
+#[test]
+#[serial]
+fn available_audio_player_errors_when_none_found() {
+    let dir = tempdir().unwrap();
+    with_path(dir.path(), || {
+        assert_eq!(
+            available_audio_player().unwrap_err().kind(),
+            io::ErrorKind::NotFound
+        )
+    });
 }

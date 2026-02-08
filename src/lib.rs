@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
-use std::io::{self, BufRead, Write, stdout};
-
+use std::io::{self, BufRead, Error, ErrorKind, Write, stdout};
 use std::time::Duration;
 
 #[cfg(feature = "fast-tick")]
@@ -15,8 +14,8 @@ pub trait Notifier {
 
 pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     args.next();
-    let mut work = 60;
-    let mut rest = 10;
+    let mut work = 3;
+    let mut rest = 1;
 
     while let Some(flag) = args.next() {
         let error = format!("missing value for {}", flag);
@@ -37,8 +36,8 @@ pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
 }
 
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
-    let work_secs = work * 60;
-    let break_secs = brk * 60;
+    let work_secs = work;
+    let break_secs = brk;
     let work = ("\x1b[1m [Work] \x1b[0m", work_secs);
     let pause = ("\x1b[1m [Break] \x1b[0m", break_secs);
 
@@ -74,4 +73,14 @@ pub fn print_flush(text: &str) -> io::Result<()> {
     print!("{text}");
     stdout().flush()?;
     Ok(())
+}
+
+pub fn available_audio_player() -> io::Result<&'static str> {
+    let paths = std::env::var_os("PATH").unwrap_or_default();
+
+    ["pw-play", "paplay"]
+        .iter()
+        .copied()
+        .find(|name| std::env::split_paths(&paths).any(|dir| dir.join(name).is_file()))
+        .ok_or(Error::new(ErrorKind::NotFound, "no audio player found"))
 }

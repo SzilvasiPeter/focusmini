@@ -18,3 +18,7 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = "debuginfo"
+
+[dev-dependencies]
+serial_test = "2"
+tempfile = "3"
