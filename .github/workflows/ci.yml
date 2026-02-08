@@ -48,4 +48,4 @@ jobs:
         run: cargo +nightly udeps --all-targets
 
       - name: Run tarpaulin
-        run: cargo +nightly tarpaulin --all-targets --features fast-tick --log-level info
+        run: cargo +nightly tarpaulin --all-targets --features fast-tick
