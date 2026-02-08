@@ -15,7 +15,7 @@ Focusmini is a compact Pomodoro CLI that alternates between work and break inter
 Install the prebuilt binary with `cargo-binstall` command:
 
 ```
-cargo-binstall focusmini
+cargo binstall focusmini
 ```
 
 Or build from the source:
