@@ -22,6 +22,20 @@ Options:
   -b, --break <break_minutes>   Break interval length in minutes [default: 10]
 ```
 
+## Install
+
+Install the prebuilt binary with `cargo-binstall` command:
+
+```
+cargo-binstall focusmini
+```
+
+Or build from the source:
+
+```
+cargo install focusmini
+```
+
 ## Commands
 
 The table summary of the make commands:
