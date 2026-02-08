@@ -10,18 +10,6 @@ Focusmini is a compact Pomodoro CLI that alternates between work and break inter
 - no external dependencies (std-only)
 - zero unsafe code, 100% lib test cov
 
-## Usage
-
-Run the `focusmini` with the deafult values or change them with options:
-
-```
-Usage: focusmini [OPTIONS]
-
-Options:
-  -w, --work <work_minutes>     Work interval length in minutes [default: 60]
-  -b, --break <break_minutes>   Break interval length in minutes [default: 10]
-```
-
 ## Install
 
 Install the prebuilt binary with `cargo-binstall` command:
@@ -34,6 +22,18 @@ Or build from the source:
 
 ```
 cargo install focusmini
+```
+
+## Usage
+
+Run the `focusmini` with the deafult values or change them with options:
+
+```
+Usage: focusmini [OPTIONS]
+
+Options:
+  -w, --work <work_minutes>     Work interval length in minutes [default: 60]
+  -b, --break <break_minutes>   Break interval length in minutes [default: 10]
 ```
 
 ## Commands
