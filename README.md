@@ -8,7 +8,7 @@ Focusmini is a compact Pomodoro CLI that alternates between work and break inter
 - ~100 lines of Rust
 - small < 500 KiB release binary
 - no external dependencies (std-only)
-- zero unsafe code, 100% lib test coverage
+- zero unsafe code, 100% `lib.rs` test coverage
 
 ## Install
 
