@@ -38,15 +38,15 @@ pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
     let work_secs = work * 60;
     let break_secs = brk * 60;
-    let work = ("\x1b[1m [Work] \x1b[0m", work_secs);
-    let pause = ("\x1b[1m [Break] \x1b[0m", break_secs);
+    let work = ("\x1b[32m [Work] \x1b[0m", work_secs);
+    let pause = ("\x1b[34m [Break] \x1b[0m", break_secs);
 
     let mut input_line = String::new();
     for (label, seconds) in [work, pause].into_iter().cycle() {
         countdown(label, seconds)?;
         alarm.run()?;
 
-        print_flush("\rEnter to continue (q to quit): ")?;
+        print_flush("\r \x1b[1m Enter\x1b[0m to continue (\x1b[1mq\x1b[0m to quit): ")?;
         input_line.clear();
         input.read_line(&mut input_line)?;
         if matches!(input_line.chars().next(), Some('q')) {
