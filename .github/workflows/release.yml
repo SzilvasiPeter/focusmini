@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - "*.*.*"
-  # TODO: remove me after release test
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,26 +17,12 @@ jobs:
         with:
           fetch-depth: 0 # ensure that all tags (full history) are fetched
 
-      - name: Determine version
-        id: version
-        run: |
-          VERSION=$(git describe --tags --match='*.*.*' --abbrev=0)
-          if [ -z "$VERSION" ]; then
-            echo "failed to get latest tag" >&2
-            exit 1
-          fi
-          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Setup Rust toolchain
         uses: moonrepo/setup-rust@v1
         with:
           channel: stable
           cache: true
           components: clippy
-          bins: cargo-edit
-
-      - name: Bump Cargo.toml
-        run: cargo set-version "${{ steps.version.outputs.tag }}"
 
       - name: Publish to crates.io
         env:
