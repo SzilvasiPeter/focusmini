@@ -9,6 +9,7 @@ fi
 version="$1"
 
 cargo set-version "$version"
+cargo check # ensures Cargo.lock is update
 git add Cargo.toml Cargo.lock
 git commit -m "Bump version to v$version"
 tag="v$version"
