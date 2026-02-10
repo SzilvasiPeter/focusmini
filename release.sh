@@ -12,6 +12,7 @@ cargo set-version "$version"
 cargo check # ensures Cargo.lock is update
 git add Cargo.toml Cargo.lock
 git commit -m "Bump version to v$version"
+git push
 tag="v$version"
 git tag "$tag"
 git push origin "$tag"
