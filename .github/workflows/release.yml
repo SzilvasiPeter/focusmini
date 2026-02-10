@@ -26,6 +26,11 @@ jobs:
           targets: ${{ env.TARGET }}
           bins: cargo-strip
 
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish
+
       - name: Build Linux binary package
         id: package
         run: |
@@ -43,8 +48,3 @@ jobs:
           name: ${{ github.ref_name }}
           body: ""
           files: ${{ steps.package.outputs.artifact }}
-
-      - name: Publish to crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish
