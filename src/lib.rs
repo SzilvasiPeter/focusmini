@@ -18,8 +18,7 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
     let mut rest = 10;
 
     while let Some(flag) = args.next() {
-        let error = format!("missing value for {}", flag);
-        let value = args.next().ok_or(error)?;
+        let value = args.next().ok_or(format!("missing value for {}", flag))?;
         match flag.as_str() {
             "-w" | "--work" => work = parse_value(flag.as_str(), value.as_str())?,
             "-b" | "--break" => rest = parse_value(flag.as_str(), value.as_str())?,
@@ -31,9 +30,14 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
 }
 
 pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
+    const MAX: u16 = 1_080;
     value
         .parse::<u16>()
-        .map_err(|_| format!("invalid value for {}", flag))
+        .map_err(|_| format!("invalid value '{value}' for {flag}"))
+        .and_then(|value| match value <= MAX {
+            true => Ok(value),
+            false => Err(format!("{flag} value cannot exceed {MAX} minutes")),
+        })
 }
 
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {

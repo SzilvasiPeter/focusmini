@@ -35,7 +35,15 @@ fn parse_args_missing_value_error() {
 fn parse_value_invalid_number() {
     assert_eq!(
         parse_value("--work", "abc").unwrap_err(),
-        "invalid value for --work"
+        "invalid value 'abc' for --work"
+    );
+}
+
+#[test]
+fn parse_value_too_big_number() {
+    assert_eq!(
+        parse_value("--work", "1081").unwrap_err(),
+        "--work value cannot exceed 1080 minutes"
     );
 }
 

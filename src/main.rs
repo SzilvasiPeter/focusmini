@@ -14,13 +14,10 @@ impl focusmini::Notifier for APlayer {
 }
 
 fn main() -> std::io::Result<()> {
-    let mut locked = std::io::stdin().lock();
+    let (work, brk) = focusmini::parse_args(std::env::args()).unwrap_or_else(|msg| {
+        eprintln!("Argument warning: {}. Using default timers.", msg);
+        (60, 10)
+    });
     let player = focusmini::available_audio_player()?;
-    match focusmini::parse_args(std::env::args()) {
-        Ok((work, brk)) => focusmini::run(work, brk, &APlayer(player), &mut locked),
-        Err(msg) => {
-            eprintln!("Argument warning: {}. Using default timers.", msg);
-            focusmini::run(60, 10, &APlayer(player), &mut locked)
-        }
-    }
+    focusmini::run(work, brk, &APlayer(player), &mut std::io::stdin().lock())
 }
