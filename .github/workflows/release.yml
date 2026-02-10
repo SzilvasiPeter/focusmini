@@ -6,25 +6,25 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    env:
+      TARGET: x86_64-unknown-linux-gnu
+      BINARY: focusmini
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # ensure that all tags (full history) are fetched
 
       - name: Setup Rust toolchain
         uses: moonrepo/setup-rust@v1
         with:
           channel: stable
           cache: true
-          components: clippy
+          targets: $TARGET
+          bins: cargo-strip
 
       - name: Publish to crates.io
         env:
@@ -34,10 +34,11 @@ jobs:
       - name: Build Linux binary package
         id: package
         run: |
-          rustup target add x86_64-unknown-linux-gnu
-          cargo build --release --target x86_64-unknown-linux-gnu
-          TAR=focusmini-x86_64-unknown-linux-gnu.tar.gz
-          tar -czf "$TAR" -C target/x86_64-unknown-linux-gnu/release focusmini
+          cargo build --release --target "$TARGET"
+          cargo strip --target "$TARGET"
+
+          TAR="${BINARY}-${TARGET}.tar.gz"
+          tar -czf "$TAR" -C "target/$TARGET/release" "$BINARY"
           echo "artifact=$TAR" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub release

@@ -17,15 +17,14 @@ jobs:
         uses: moonrepo/setup-rust@v1
         with:
           channel: stable
-          components: clippy
           cache: true
+          components: clippy
           bins: cargo-audit,cargo-deny,cargo-geiger
 
       - name: Setup nightly toolchain with cache
         uses: moonrepo/setup-rust@v1
         with:
           channel: nightly
-          components: clippy
           cache: true
           bins: cargo-udeps,cargo-tarpaulin
 
