@@ -1,4 +1,4 @@
-.PHONY: build run lint security
+.PHONY: build run lint test cov sec
 
 BINARY := target/release/focusmini
 
