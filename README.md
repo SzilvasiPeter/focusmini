@@ -9,6 +9,7 @@ Focusmini is a compact Pomodoro CLI that alternates between work and break inter
 - small < 500 KiB release binary
 - no external dependencies (std-only)
 - zero unsafe code, 100% `lib.rs` test coverage
+- test coverage report: https://szilvasipeter.github.io/focusmini/coverage/index.html
 
 ## Install
 
