@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -47,10 +50,38 @@ jobs:
         run: cargo +nightly udeps --all-targets
 
       - name: Run tarpaulin
-        run: cargo +nightly tarpaulin --all-targets --features fast-tick --out Xml --output-dir coverage
+        run: cargo +nightly tarpaulin --all-targets --features fast-tick --out Xml --out Html --output-dir coverage
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/cobertura.xml
+          path: coverage
+
+  publish-coverage:
+    needs: checks
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Prepare Pages content
+        run: |
+          mkdir -p site
+          cp coverage/tarpaulin-report.html site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
