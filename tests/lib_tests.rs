@@ -7,7 +7,7 @@ use tempfile::tempdir;
 use focusmini::{available_audio_player, countdown, parse_args, parse_value, print_flush, run};
 
 fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
-    values.iter().map(|v| v.to_string())
+    values.iter().map(std::string::ToString::to_string)
 }
 
 #[test]
@@ -82,20 +82,20 @@ impl focusmini::Notifier for OkNotifier {
 
 #[test]
 fn run_propagates_notifier_error() {
-    let mut input = Cursor::new("".as_bytes());
+    let mut input = Cursor::new(b"");
     let err = run(0, 0, &ErrorNotifier, &mut input).unwrap_err();
     assert_eq!(err.kind(), io::ErrorKind::Other);
 }
 
 #[test]
 fn run_stops_on_q_input() {
-    let mut input = Cursor::new("q\n".as_bytes());
+    let mut input = Cursor::new(b"q\n");
     assert!(run(0, 0, &OkNotifier, &mut input).is_ok());
 }
 
 #[test]
 fn run_continues_after_enter_before_quit() {
-    let mut input = Cursor::new("\nq\n".as_bytes());
+    let mut input = Cursor::new(b"\nq\n");
     assert!(run(0, 0, &OkNotifier, &mut input).is_ok());
 }
 
@@ -107,7 +107,7 @@ fn countdown_one_second() {
 #[cfg(feature = "fast-tick")]
 #[test]
 fn run_one_second_work_triggers_clear_line() {
-    let mut input = Cursor::new("\nq\n".as_bytes());
+    let mut input = Cursor::new(b"\nq\n");
     assert!(run(1, 0, &OkNotifier, &mut input).is_ok());
 }
 
@@ -134,7 +134,7 @@ fn available_audio_player_returns_pw_play_when_present() {
     let dir = tempdir().unwrap();
     std::fs::write(dir.path().join("pw-play"), b"").unwrap();
     with_path(dir.path(), || {
-        assert_eq!(available_audio_player().unwrap(), "pw-play")
+        assert_eq!(available_audio_player().unwrap(), "pw-play");
     });
 }
 
@@ -144,7 +144,7 @@ fn available_audio_player_returns_paplay_when_pw_play_missing() {
     let dir = tempdir().unwrap();
     std::fs::write(dir.path().join("paplay"), b"").unwrap();
     with_path(dir.path(), || {
-        assert_eq!(available_audio_player().unwrap(), "paplay")
+        assert_eq!(available_audio_player().unwrap(), "paplay");
     });
 }
 
@@ -156,6 +156,6 @@ fn available_audio_player_errors_when_none_found() {
         assert_eq!(
             available_audio_player().unwrap_err().kind(),
             io::ErrorKind::NotFound
-        )
+        );
     });
 }

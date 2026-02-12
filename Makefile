@@ -10,7 +10,7 @@ run: build
 	$(BINARY)
 
 lint:
-	cargo clippy --release
+	cargo clippy --all-targets --all-features --release
 
 test:
 	cargo test --release --all-targets --features fast-tick
