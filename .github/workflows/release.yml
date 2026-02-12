@@ -24,7 +24,6 @@ jobs:
           channel: stable
           cache: true
           targets: ${{ env.TARGET }}
-          bins: cargo-strip
 
       - name: Publish to crates.io
         env:
@@ -35,7 +34,7 @@ jobs:
         id: package
         run: |
           cargo build --release --target "$TARGET"
-          cargo strip --target "$TARGET"
+          strip "target/$TARGET/release/$BINARY"
 
           TAR="${BINARY}-${TARGET}.tar.gz"
           tar -czf "$TAR" -C "target/$TARGET/release" "$BINARY"
