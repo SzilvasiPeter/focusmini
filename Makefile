@@ -10,13 +10,13 @@ run: build
 	$(BINARY)
 
 lint:
-	cargo clippy --release --all-targets -- -W clippy::all
+	cargo clippy --release
 
 test:
 	cargo test --release --all-targets --features fast-tick
 
 cov:
-	cargo tarpaulin --all-targets --features fast-tick
+	cargo tarpaulin --all-targets --features fast-tick --engine llvm
 
 sec:
 	cargo audit

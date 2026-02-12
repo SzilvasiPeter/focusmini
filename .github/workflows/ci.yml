@@ -32,7 +32,7 @@ jobs:
           bins: cargo-udeps,cargo-tarpaulin
 
       - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::all
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Run tests
         run: cargo test --all-targets --features fast-tick
@@ -50,7 +50,7 @@ jobs:
         run: cargo +nightly udeps --all-targets
 
       - name: Run tarpaulin
-        run: cargo +nightly tarpaulin --all-targets --features fast-tick --out Xml --out Html --output-dir coverage
+        run: cargo +nightly tarpaulin --all-targets --features fast-tick --engine llvm --out Html --output-dir coverage
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

@@ -12,23 +12,17 @@ fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
 
 #[test]
 fn parse_args_defaults() {
-    assert_eq!(parse_args(args(&["prog"])).unwrap(), (60, 10));
+    assert_eq!(parse_args(args(&[])).unwrap(), (60, 10));
 }
 
 #[test]
 fn parse_args_custom_values() {
-    assert_eq!(
-        parse_args(args(&["prog", "-w", "25", "-b", "5"])).unwrap(),
-        (25, 5)
-    );
+    assert_eq!(parse_args(args(&["-w", "25", "-b", "5"])).unwrap(), (25, 5));
 }
 
 #[test]
 fn parse_args_missing_value_error() {
-    assert_eq!(
-        parse_args(args(&["prog", "-w"])).unwrap_err(),
-        "missing value for -w"
-    );
+    assert_eq!(parse_args(args(&["-w"])).unwrap_err(), "no value for -w");
 }
 
 #[test]
@@ -50,17 +44,14 @@ fn parse_value_too_big_number() {
 #[test]
 fn parse_args_long_flags() {
     assert_eq!(
-        parse_args(args(&["prog", "--work", "15", "--break", "7"])).unwrap(),
+        parse_args(args(&["--work", "15", "--break", "7"])).unwrap(),
         (15, 7)
     );
 }
 
 #[test]
 fn parse_args_ignores_unknown_flag() {
-    assert_eq!(
-        parse_args(args(&["prog", "--unknown", "1"])).unwrap(),
-        (60, 10)
-    );
+    assert_eq!(parse_args(args(&["--unknown", "1"])).unwrap(), (60, 10));
 }
 
 #[test]
@@ -126,6 +117,7 @@ fn print_flush_accepts_text() {
 }
 
 // The `with_path` mutates `PATH`, so the audio-player tests must run serially to avoid cross-test interference.
+#[allow(unsafe_code)]
 fn with_path(path: &Path, f: impl FnOnce()) {
     let prev = std::env::var_os("PATH");
     unsafe { std::env::set_var("PATH", path) };

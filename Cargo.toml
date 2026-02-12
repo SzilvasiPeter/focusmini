@@ -16,6 +16,16 @@ tempfile = "3"
 [features]
 fast-tick = []
 
+[lints.rust]
+unsafe_code = "deny"
+unused_results = "warn"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+cargo = "warn"
+
 [profile.release]
 opt-level = "z"
 lto = true
