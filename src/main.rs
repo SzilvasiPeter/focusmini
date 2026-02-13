@@ -1,14 +1,20 @@
+#![forbid(unsafe_code)]
 use focusmini::{Notifier, available_audio_player, parse_args, run};
 use std::env::args;
-use std::io::{Error, Result, stdin};
+use std::io::{Error, ErrorKind, Result, stdin};
+use std::path::Path;
 use std::process::Command;
 
 pub struct APlayer(&'static str);
 
 impl Notifier for APlayer {
     fn run(&self) -> Result<()> {
+        let sound = "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
+        if !Path::new(sound).is_file() {
+            return Err(Error::new(ErrorKind::NotFound, format!("missing: {sound}")));
+        }
         Command::new(self.0)
-            .arg("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga")
+            .arg(sound)
             .status()?
             .success()
             .then_some(())

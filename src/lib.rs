@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use std::env::{split_paths, var_os};
 use std::io::{self, BufRead, Error, ErrorKind, Write, stdout};
 use std::thread::sleep;
