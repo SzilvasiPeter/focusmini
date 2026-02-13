@@ -1,7 +1,7 @@
 use std::io::{self, Cursor};
 use std::path::Path;
+use std::sync::{Mutex, PoisonError};
 
-use serial_test::serial;
 use tempfile::tempdir;
 
 use focusmini::{available_audio_player, countdown, parse_args, parse_value, print_flush, run};
@@ -116,12 +116,17 @@ fn print_flush_accepts_text() {
     assert!(print_flush("label").is_ok());
 }
 
-// The `with_path` mutates `PATH`, so the audio-player tests must run serially to avoid cross-test interference.
+// Temporarily sets PATH while holding a global lock to avoid test interference, then restores the previous value.
 #[allow(unsafe_code)]
 fn with_path(path: &Path, f: impl FnOnce()) {
+    static PATH_LOCK: Mutex<()> = Mutex::new(());
+    let _guard = PATH_LOCK.lock().unwrap_or_else(PoisonError::into_inner);
+
     let prev = std::env::var_os("PATH");
     unsafe { std::env::set_var("PATH", path) };
+
     f();
+
     match prev {
         Some(val) => unsafe { std::env::set_var("PATH", val) },
         None => unsafe { std::env::remove_var("PATH") },
@@ -129,7 +134,6 @@ fn with_path(path: &Path, f: impl FnOnce()) {
 }
 
 #[test]
-#[serial]
 fn available_audio_player_returns_pw_play_when_present() {
     let dir = tempdir().unwrap();
     std::fs::write(dir.path().join("pw-play"), b"").unwrap();
@@ -139,7 +143,6 @@ fn available_audio_player_returns_pw_play_when_present() {
 }
 
 #[test]
-#[serial]
 fn available_audio_player_returns_paplay_when_pw_play_missing() {
     let dir = tempdir().unwrap();
     std::fs::write(dir.path().join("paplay"), b"").unwrap();
@@ -149,7 +152,6 @@ fn available_audio_player_returns_paplay_when_pw_play_missing() {
 }
 
 #[test]
-#[serial]
 fn available_audio_player_errors_when_none_found() {
     let dir = tempdir().unwrap();
     with_path(dir.path(), || {
