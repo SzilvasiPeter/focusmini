@@ -21,18 +21,16 @@ pub trait Notifier {
 /// Parse optional work/break flags and return their minute values.
 ///
 /// # Errors
-/// Returns `Err` if a flag is missing a value or the value fails parsing/limits.
+/// Returns `Err` if a flag is unsupported, missing a value, or fails parsing/limits.
 pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     let mut work = 60;
     let mut rest = 10;
 
     while let Some(flag) = args.next() {
-        let flag = flag.as_str();
-        let value = args.next().ok_or_else(|| format!("no value for {flag}"))?;
-        match flag {
-            "-w" | "--work" => work = parse_value(flag, &value)?,
-            "-b" | "--break" => rest = parse_value(flag, &value)?,
-            _ => {}
+        match flag.as_str() {
+            "-w" | "--work" => work = parse_value(&flag, &mut args)?,
+            "-b" | "--break" => rest = parse_value(&flag, &mut args)?,
+            _ => return Err(format!("unknown flag {flag}")),
         }
     }
 
@@ -42,9 +40,10 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
 /// Convert a flag string into minutes, capping at the configured maximum.
 ///
 /// # Errors
-/// Signals when parsing fails or the resulting minutes exceed the allowed limit.
-pub fn parse_value(flag: &str, value: &str) -> Result<u16, String> {
+/// Signals when a flag is missing a value, parsing fails, or the minutes exceed the limit.
+pub fn parse_value(flag: &str, args: &mut impl Iterator<Item = String>) -> Result<u16, String> {
     const MAX: u16 = 1_080;
+    let value = args.next().ok_or_else(|| format!("no value for {flag}"))?;
     let value = value
         .parse::<u16>()
         .map_err(|_| format!("invalid value '{value}' for {flag}"))?;

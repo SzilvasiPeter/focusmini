@@ -8,6 +8,10 @@ fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
     values.iter().map(std::string::ToString::to_string)
 }
 
+fn arg(value: &str) -> impl Iterator<Item = String> + '_ {
+    std::iter::once(value).map(std::string::ToString::to_string)
+}
+
 struct TempDir {
     path: PathBuf,
 }
@@ -55,16 +59,18 @@ fn parse_args_missing_value_error() {
 
 #[test]
 fn parse_value_invalid_number() {
+    let mut values = arg("abc");
     assert_eq!(
-        parse_value("--work", "abc").unwrap_err(),
+        parse_value("--work", &mut values).unwrap_err(),
         "invalid value 'abc' for --work"
     );
 }
 
 #[test]
 fn parse_value_too_big_number() {
+    let mut values = arg("1081");
     assert_eq!(
-        parse_value("--work", "1081").unwrap_err(),
+        parse_value("--work", &mut values).unwrap_err(),
         "--work value cannot exceed 1080 minutes"
     );
 }
@@ -78,13 +84,17 @@ fn parse_args_long_flags() {
 }
 
 #[test]
-fn parse_args_ignores_unknown_flag() {
-    assert_eq!(parse_args(args(&["--unknown", "1"])).unwrap(), (60, 10));
+fn parse_args_unknown_flag_error() {
+    assert_eq!(
+        parse_args(args(&["--unknown", "1"])).unwrap_err(),
+        "unknown flag --unknown"
+    );
 }
 
 #[test]
 fn parse_value_valid_number() {
-    assert_eq!(parse_value("--break", "3").unwrap(), 3);
+    let mut values = arg("3");
+    assert_eq!(parse_value("--break", &mut values).unwrap(), 3);
 }
 
 #[test]
