@@ -1,13 +1,41 @@
 use std::io::{self, Cursor};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Mutex, PoisonError};
-
-use tempfile::tempdir;
 
 use focusmini::{available_audio_player, countdown, parse_args, parse_value, print_flush, run};
 
 fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
     values.iter().map(std::string::ToString::to_string)
+}
+
+struct TempDir {
+    path: PathBuf,
+}
+
+impl TempDir {
+    fn new(name: &str) -> io::Result<Self> {
+        let path = std::env::temp_dir().join(name);
+        if path.exists() {
+            std::fs::remove_dir_all(&path)?;
+        }
+        std::fs::create_dir(&path)?;
+        Ok(Self { path })
+    }
+
+    fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        if let Err(err) = std::fs::remove_dir_all(&self.path) {
+            eprintln!(
+                "warning: failed to remove temp dir '{}': {err}",
+                self.path.display()
+            );
+        }
+    }
 }
 
 #[test]
@@ -116,7 +144,8 @@ fn print_flush_accepts_text() {
     assert!(print_flush("label").is_ok());
 }
 
-// Temporarily sets PATH while holding a global lock to avoid test interference, then restores the previous value.
+// Temporarily sets PATH while holding a global lock to avoid test interference,
+// then restores the previous value.
 #[allow(unsafe_code)]
 fn with_path(path: &Path, f: impl FnOnce()) {
     static PATH_LOCK: Mutex<()> = Mutex::new(());
@@ -135,7 +164,7 @@ fn with_path(path: &Path, f: impl FnOnce()) {
 
 #[test]
 fn available_audio_player_returns_pw_play_when_present() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new("available_audio_player_returns_pw_play_when_present").unwrap();
     std::fs::write(dir.path().join("pw-play"), b"").unwrap();
     with_path(dir.path(), || {
         assert_eq!(available_audio_player().unwrap(), "pw-play");
@@ -144,7 +173,7 @@ fn available_audio_player_returns_pw_play_when_present() {
 
 #[test]
 fn available_audio_player_returns_paplay_when_pw_play_missing() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new("available_audio_player_returns_paplay_when_pw_play_missing").unwrap();
     std::fs::write(dir.path().join("paplay"), b"").unwrap();
     with_path(dir.path(), || {
         assert_eq!(available_audio_player().unwrap(), "paplay");
@@ -153,7 +182,7 @@ fn available_audio_player_returns_paplay_when_pw_play_missing() {
 
 #[test]
 fn available_audio_player_errors_when_none_found() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new("available_audio_player_errors_when_none_found").unwrap();
     with_path(dir.path(), || {
         assert_eq!(
             available_audio_player().unwrap_err().kind(),
