@@ -28,9 +28,12 @@ jobs:
         with:
           channel: nightly
           cache: true
-          components: clippy
+          components: clippy, rustfmt
           bins: cargo-udeps,cargo-tarpaulin
-
+      
+      - name: Run format
+        run: cargo fmt --all -- --check
+        
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
