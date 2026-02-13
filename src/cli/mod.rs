@@ -1,5 +1,9 @@
 #![forbid(unsafe_code)]
-use std::env::{split_paths, var_os};
+#[cfg(test)]
+mod tests;
+
+use std::env::split_paths;
+use std::ffi::OsStr;
 use std::io::{self, BufRead, Error, ErrorKind, Write, stdout};
 use std::thread::sleep;
 use std::time::Duration;
@@ -105,16 +109,14 @@ pub fn print_flush(text: &str) -> io::Result<()> {
     Ok(())
 }
 
-/// Probe `PATH` for a known audio player and return its executable name.
+/// Check `PATH` for a known audio player and return its executable name.
 ///
 /// # Errors
 /// Yields `ErrorKind::NotFound` when neither supported player is accessible.
-pub fn available_audio_player() -> io::Result<&'static str> {
-    let paths = var_os("PATH").unwrap_or_default();
-
+pub fn find_audio_player(paths: &OsStr) -> io::Result<&'static str> {
     ["pw-play", "paplay"]
         .iter()
         .copied()
-        .find(|name| split_paths(&paths).any(|dir| dir.join(name).is_file()))
+        .find(|name| split_paths(paths).any(|dir| dir.join(name).is_file()))
         .ok_or_else(|| Error::new(ErrorKind::NotFound, "no audio player found"))
 }

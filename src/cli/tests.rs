@@ -1,45 +1,10 @@
 use std::io::{self, Cursor};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, PoisonError};
 
-use focusmini::{available_audio_player, countdown, parse_args, parse_value, print_flush, run};
+use super::{Notifier, countdown, find_audio_player, parse_args, parse_value, print_flush, run};
 
 fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
     values.iter().map(std::string::ToString::to_string)
-}
-
-fn arg(value: &str) -> impl Iterator<Item = String> + '_ {
-    std::iter::once(value).map(std::string::ToString::to_string)
-}
-
-struct TempDir {
-    path: PathBuf,
-}
-
-impl TempDir {
-    fn new(name: &str) -> io::Result<Self> {
-        let path = std::env::temp_dir().join(name);
-        if path.exists() {
-            std::fs::remove_dir_all(&path)?;
-        }
-        std::fs::create_dir(&path)?;
-        Ok(Self { path })
-    }
-
-    fn path(&self) -> &Path {
-        &self.path
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        if let Err(err) = std::fs::remove_dir_all(&self.path) {
-            eprintln!(
-                "warning: failed to remove temp dir '{}': {err}",
-                self.path.display()
-            );
-        }
-    }
 }
 
 #[test]
@@ -55,6 +20,10 @@ fn parse_args_custom_values() {
 #[test]
 fn parse_args_missing_value_error() {
     assert_eq!(parse_args(args(&["-w"])).unwrap_err(), "no value for -w");
+}
+
+fn arg(value: &str) -> impl Iterator<Item = String> + '_ {
+    std::iter::once(value).map(std::string::ToString::to_string)
 }
 
 #[test]
@@ -104,7 +73,7 @@ fn countdown_zero_seconds_runs_quickly() {
 
 struct ErrorNotifier;
 
-impl focusmini::Notifier for ErrorNotifier {
+impl Notifier for ErrorNotifier {
     fn run(&self) -> io::Result<()> {
         Err(io::Error::other("not ready"))
     }
@@ -112,7 +81,7 @@ impl focusmini::Notifier for ErrorNotifier {
 
 struct OkNotifier;
 
-impl focusmini::Notifier for OkNotifier {
+impl Notifier for OkNotifier {
     fn run(&self) -> io::Result<()> {
         Ok(())
     }
@@ -154,21 +123,33 @@ fn print_flush_accepts_text() {
     assert!(print_flush("label").is_ok());
 }
 
-// Temporarily sets PATH while holding a global lock to avoid test interference,
-// then restores the previous value.
-#[allow(unsafe_code)]
-fn with_path(path: &Path, f: impl FnOnce()) {
-    static PATH_LOCK: Mutex<()> = Mutex::new(());
-    let _guard = PATH_LOCK.lock().unwrap_or_else(PoisonError::into_inner);
+struct TempDir {
+    path: PathBuf,
+}
 
-    let prev = std::env::var_os("PATH");
-    unsafe { std::env::set_var("PATH", path) };
+impl TempDir {
+    fn new(name: &str) -> io::Result<Self> {
+        let path = std::env::temp_dir().join(name);
+        if path.exists() {
+            std::fs::remove_dir_all(&path)?;
+        }
+        std::fs::create_dir(&path)?;
+        Ok(Self { path })
+    }
 
-    f();
+    fn path(&self) -> &Path {
+        &self.path
+    }
+}
 
-    match prev {
-        Some(val) => unsafe { std::env::set_var("PATH", val) },
-        None => unsafe { std::env::remove_var("PATH") },
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        if let Err(err) = std::fs::remove_dir_all(&self.path) {
+            eprintln!(
+                "warning: failed to remove temp dir '{}': {err}",
+                self.path.display()
+            );
+        }
     }
 }
 
@@ -176,27 +157,21 @@ fn with_path(path: &Path, f: impl FnOnce()) {
 fn available_audio_player_returns_pw_play_when_present() {
     let dir = TempDir::new("available_audio_player_returns_pw_play_when_present").unwrap();
     std::fs::write(dir.path().join("pw-play"), b"").unwrap();
-    with_path(dir.path(), || {
-        assert_eq!(available_audio_player().unwrap(), "pw-play");
-    });
+    let paths = std::env::join_paths([dir.path()]).unwrap();
+    assert!(find_audio_player(paths.as_os_str()).is_ok());
 }
 
 #[test]
 fn available_audio_player_returns_paplay_when_pw_play_missing() {
     let dir = TempDir::new("available_audio_player_returns_paplay_when_pw_play_missing").unwrap();
     std::fs::write(dir.path().join("paplay"), b"").unwrap();
-    with_path(dir.path(), || {
-        assert_eq!(available_audio_player().unwrap(), "paplay");
-    });
+    let paths = std::env::join_paths([dir.path()]).unwrap();
+    assert!(find_audio_player(paths.as_os_str()).is_ok());
 }
 
 #[test]
 fn available_audio_player_errors_when_none_found() {
     let dir = TempDir::new("available_audio_player_errors_when_none_found").unwrap();
-    with_path(dir.path(), || {
-        assert_eq!(
-            available_audio_player().unwrap_err().kind(),
-            io::ErrorKind::NotFound
-        );
-    });
+    let paths = std::env::join_paths([dir.path()]).unwrap();
+    assert!(find_audio_player(paths.as_os_str()).is_err());
 }

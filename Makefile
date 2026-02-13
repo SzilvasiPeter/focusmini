@@ -1,6 +1,8 @@
-.PHONY: build run lint test cov sec
+.PHONY: all build run lint test cov sec
 
 BINARY := target/release/focusmini
+
+all: lint test cov sec
 
 build:
 	cargo build --release

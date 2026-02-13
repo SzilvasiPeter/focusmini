@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
-use focusmini::{Notifier, available_audio_player, parse_args, run};
-use std::env::args;
+mod cli;
+
+use cli::{Notifier, find_audio_player, parse_args, run};
+use std::env::{args, var_os};
 use std::io::{Error, ErrorKind, Result, stdin};
 use std::path::Path;
 use std::process::Command;
@@ -27,6 +29,7 @@ fn main() -> Result<()> {
         eprintln!("Argument warning: {msg}. Using default timers.");
         (60, 10)
     });
-    let player = available_audio_player()?;
+    let paths = var_os("PATH").ok_or_else(|| Error::new(ErrorKind::NotFound, "no PATH env"))?;
+    let player = find_audio_player(&paths)?;
     run(work, brk, &APlayer(player), &mut stdin().lock())
 }
