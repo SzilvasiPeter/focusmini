@@ -15,17 +15,9 @@ const TICK_DURATION: Duration = Duration::ZERO;
 const TICK_DURATION: Duration = Duration::from_secs(1);
 
 pub trait Notifier {
-    /// Alarm action that runs when a countdown reaches zero.
-    ///
-    /// # Errors
-    /// Delegates to the implementation and yields any I/O error it produces.
     fn run(&self) -> io::Result<()>;
 }
 
-/// Parse optional work/break flags and return their minute values.
-///
-/// # Errors
-/// Returns `Err` if a flag is unsupported, missing a value, or fails parsing/limits.
 pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     let mut work = 60;
     let mut rest = 10;
@@ -41,10 +33,6 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
     Ok((work, rest))
 }
 
-/// Convert a flag string into minutes, capping at the configured maximum.
-///
-/// # Errors
-/// Signals when a flag is missing a value, parsing fails, or the minutes exceed the limit.
 pub fn parse_value(flag: &str, args: &mut impl Iterator<Item = String>) -> Result<u16, String> {
     const MAX: u16 = 1_080;
     let value = args.next().ok_or_else(|| format!("no value for {flag}"))?;
@@ -56,10 +44,6 @@ pub fn parse_value(flag: &str, args: &mut impl Iterator<Item = String>) -> Resul
         .ok_or_else(|| format!("{flag} value cannot exceed {MAX} minutes"))
 }
 
-/// Cycle between work and break timers, triggering `alarm` after each session.
-///
-/// # Errors
-/// Any I/O failure from `countdown`, the notifier, or stdin/stdout is returned.
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
     let work_secs = work * 60;
     let break_secs = brk * 60;
@@ -85,10 +69,6 @@ pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -
     Ok(())
 }
 
-/// Print a countdown from `seconds` for the supplied label.
-///
-/// # Errors
-/// Fails if writing to stdout or flushing fails.
 pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     for sec in (1..=seconds).rev() {
         print_flush(&format!("\r{label} {:02}:{:02}", sec / 60, sec % 60))?;
@@ -99,20 +79,12 @@ pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     Ok(())
 }
 
-/// Write `text` to stdout and flush immediately.
-///
-/// # Errors
-/// Returns the flush error if the buffer cannot be written through.
 pub fn print_flush(text: &str) -> io::Result<()> {
     print!("{text}");
     stdout().flush()?;
     Ok(())
 }
 
-/// Check `PATH` for a known audio player and return its executable name.
-///
-/// # Errors
-/// Yields `ErrorKind::NotFound` when neither supported player is accessible.
 pub fn find_audio_player(paths: &OsStr) -> io::Result<&'static str> {
     ["pw-play", "paplay"]
         .iter()
