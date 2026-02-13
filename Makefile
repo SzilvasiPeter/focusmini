@@ -18,7 +18,7 @@ test:
 	cargo test --release --all-targets --features fast-tick
 
 cov:
-	cargo tarpaulin --all-targets --features fast-tick --engine llvm
+	cargo tarpaulin --all-targets --features fast-tick --engine llvm --include-files 'src/main.rs' 'src/cli/mod.rs'
 
 sec:
 	cargo audit

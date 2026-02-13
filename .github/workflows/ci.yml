@@ -30,10 +30,10 @@ jobs:
           cache: true
           components: clippy, rustfmt
           bins: cargo-udeps,cargo-tarpaulin
-      
+
       - name: Run format
         run: cargo fmt --all -- --check
-        
+
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
@@ -53,7 +53,11 @@ jobs:
         run: cargo +nightly udeps --all-targets
 
       - name: Run tarpaulin
-        run: cargo +nightly tarpaulin --all-targets --features fast-tick --engine llvm --out Html --output-dir coverage
+        run: |
+          cargo +nightly tarpaulin \
+            --all-targets --features fast-tick --engine llvm \
+            --include-files 'src/main.rs' 'src/cli/mod.rs' \
+            --out Html --output-dir coverage
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
