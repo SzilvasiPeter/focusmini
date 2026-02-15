@@ -33,17 +33,6 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
     Ok((work, rest))
 }
 
-pub fn parse_value(flag: &str, args: &mut impl Iterator<Item = String>) -> Result<u16, String> {
-    const MAX: u16 = 1_080;
-    let value = args.next().ok_or_else(|| format!("no value for {flag}"))?;
-    let value = value
-        .parse::<u16>()
-        .map_err(|_| format!("invalid value '{value}' for {flag}"))?;
-    (value <= MAX)
-        .then_some(value)
-        .ok_or_else(|| format!("{flag} value cannot exceed {MAX} minutes"))
-}
-
 pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
     let work_secs = work * 60;
     let break_secs = brk * 60;
@@ -69,7 +58,26 @@ pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -
     Ok(())
 }
 
-pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
+pub fn find_audio_player(paths: &OsStr) -> io::Result<&'static str> {
+    ["pw-play", "paplay"]
+        .iter()
+        .copied()
+        .find(|name| split_paths(paths).any(|dir| dir.join(name).is_file()))
+        .ok_or_else(|| Error::new(ErrorKind::NotFound, "no audio player found"))
+}
+
+fn parse_value(flag: &str, args: &mut impl Iterator<Item = String>) -> Result<u16, String> {
+    const MAX: u16 = 1_080;
+    let value = args.next().ok_or_else(|| format!("no value for {flag}"))?;
+    let value = value
+        .parse::<u16>()
+        .map_err(|_| format!("invalid value '{value}' for {flag}"))?;
+    (value <= MAX)
+        .then_some(value)
+        .ok_or_else(|| format!("{flag} value cannot exceed {MAX} minutes"))
+}
+
+fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     for sec in (1..=seconds).rev() {
         print_flush(&format!("\r{label} {:02}:{:02}", sec / 60, sec % 60))?;
         sleep(TICK_DURATION);
@@ -79,16 +87,8 @@ pub fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     Ok(())
 }
 
-pub fn print_flush(text: &str) -> io::Result<()> {
+fn print_flush(text: &str) -> io::Result<()> {
     print!("{text}");
     stdout().flush()?;
     Ok(())
-}
-
-pub fn find_audio_player(paths: &OsStr) -> io::Result<&'static str> {
-    ["pw-play", "paplay"]
-        .iter()
-        .copied()
-        .find(|name| split_paths(paths).any(|dir| dir.join(name).is_file()))
-        .ok_or_else(|| Error::new(ErrorKind::NotFound, "no audio player found"))
 }
