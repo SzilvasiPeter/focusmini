@@ -5,6 +5,7 @@ version=${1:?usage: $0 <version>}
 tag="v$version"
 
 cargo set-version "$version"
+cargo generate-lockfile
 git add Cargo.toml Cargo.lock
 git commit -m "Bump version to $tag"
 git tag "$tag"
