@@ -38,13 +38,13 @@ Options:
 
 ## Commands
 
-The table summary of the make commands:
+The table summary of the `just` commands:
 
-| Make Target | Description |
-|-------------|-------------|
-| `make build` | Build the release binary and strip it. |
-| `make run` | Build and execute the release binary. |
-| `make lint` | Run Clippy in release mode against all targets with `clippy::all`. |
-| `make test` | Run tests with the `fast-tick` feature in release mode. |
-| `make cov` | Run test coverage with `cargo tarpaulin` command. |
-| `make sec` | Run `cargo audit`, `cargo deny check`, `cargo geiger` and `cargo +nightly udeps --release`. |
+| Just Command | Description |
+|--------------|-------------|
+| `just build` | Build the release binary and strip it. |
+| `just run` | Build and execute the release binary. |
+| `just lint` | Run Clippy in release mode against all targets with `clippy::all`. |
+| `just test` | Run tests with the `fast-tick` feature in release mode. |
+| `just cov` | Run test coverage with `cargo tarpaulin` command. |
+| `just sec` | Run `cargo audit`, `cargo deny check`, `cargo geiger` and `cargo +nightly udeps --release`. |
