@@ -1,6 +1,6 @@
 binary := "target/release/focusmini"
 
-all: lint test cov sec
+all: lint test sec cov
 
 build:
     cargo build --release

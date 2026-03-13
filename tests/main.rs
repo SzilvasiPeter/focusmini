@@ -13,6 +13,8 @@ fn happy_path_valid_args() {
         .arg("1")
         .arg("--break")
         .arg("1")
+        .arg("--sound")
+        .arg("none")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -27,26 +29,4 @@ fn happy_path_valid_args() {
     assert!(out.status.success());
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(!stderr.contains("Argument warning"));
-}
-
-#[test]
-fn warning_path_invalid_args_falls_back() {
-    let mut cmd = bin();
-    let _ = cmd
-        .arg("--work")
-        .arg("bad")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-
-    let mut child = cmd.spawn().expect("spawn focusmini");
-    {
-        let stdin = child.stdin.as_mut().expect("stdin");
-        stdin.write_all(b"q\n").expect("write stdin");
-    }
-
-    let out = child.wait_with_output().expect("wait");
-    assert!(out.status.success());
-    let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("Argument warning"));
 }

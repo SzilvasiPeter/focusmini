@@ -3,12 +3,12 @@
 Focusmini is a compact Pomodoro CLI that alternates between work and break intervals while triggering an audio cue on each transition.
 
 > [!NOTE]
-> The CLI uses the terminal bell (BEL, `\x07`). If you don’t hear a sound, enable or configure the bell in your terminal settings.
+> The CLI plays a sound with `paplay` on each transition. Use `--sound none` to disable it or set a custom sound with `--sound <path>`.
 
 - ~100 LOC production code
 - small < 500 KiB release binary
 - no external dependencies (std-only)
-- zero unsafe code, 100% test [coverage](https://szilvasipeter.github.io/focusmini/coverage/index.html)
+- zero unsafe code, >90% test [coverage](https://szilvasipeter.github.io/focusmini/coverage/index.html)
 
 ## Install
 
@@ -34,6 +34,7 @@ Usage: focusmini [OPTIONS]
 Options:
   -w, --work <work_minutes>     Work interval length in minutes [default: 60]
   -b, --break <break_minutes>   Break interval length in minutes [default: 10]
+  -s, --sound <path>            Sound file path or `none` to disable [default: /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga]
 ```
 
 ## Commands
