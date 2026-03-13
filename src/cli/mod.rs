@@ -2,9 +2,7 @@
 #[cfg(test)]
 mod tests;
 
-use std::env::split_paths;
-use std::ffi::OsStr;
-use std::io::{self, BufRead, Error, ErrorKind, Write, stdout};
+use std::io::{self, BufRead, Write, stdout};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -13,10 +11,6 @@ const TICK_DURATION: Duration = Duration::ZERO;
 
 #[cfg(not(feature = "fast-tick"))]
 const TICK_DURATION: Duration = Duration::from_secs(1);
-
-pub trait Notifier {
-    fn run(&self) -> io::Result<()>;
-}
 
 pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     let mut work = 60;
@@ -33,7 +27,7 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
     Ok((work, rest))
 }
 
-pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -> io::Result<()> {
+pub fn run(work: u16, brk: u16, input: &mut dyn BufRead) -> io::Result<()> {
     let work_secs = work * 60;
     let break_secs = brk * 60;
     let work_session = ("\x1b[32m [Work] \x1b[0m", work_secs);
@@ -42,7 +36,7 @@ pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -
     let mut input_line = String::new();
     for (label, seconds) in [work_session, break_session].into_iter().cycle() {
         countdown(label, seconds)?;
-        alarm.run()?;
+        print!("\x07");
 
         print_flush("\r \x1b[1m Enter\x1b[0m to continue (\x1b[1mq\x1b[0m to quit): ")?;
         input_line.clear();
@@ -58,23 +52,16 @@ pub fn run(work: u16, brk: u16, alarm: &dyn Notifier, input: &mut dyn BufRead) -
     Ok(())
 }
 
-pub fn find_audio_player(paths: &OsStr) -> io::Result<&'static str> {
-    ["pw-play", "paplay"]
-        .iter()
-        .copied()
-        .find(|name| split_paths(paths).any(|dir| dir.join(name).is_file()))
-        .ok_or_else(|| Error::new(ErrorKind::NotFound, "no audio player found"))
-}
-
 fn parse_value(flag: &str, args: &mut impl Iterator<Item = String>) -> Result<u16, String> {
     const MAX: u16 = 1_080;
     let value = args.next().ok_or_else(|| format!("no value for {flag}"))?;
     let value = value
         .parse::<u16>()
         .map_err(|_| format!("invalid value '{value}' for {flag}"))?;
-    (value <= MAX)
+    (1..=MAX)
+        .contains(&value)
         .then_some(value)
-        .ok_or_else(|| format!("{flag} value cannot exceed {MAX} minutes"))
+        .ok_or_else(|| format!("{flag} value should be between 1 and {MAX} minutes"))
 }
 
 fn countdown(label: &str, seconds: u16) -> io::Result<()> {
