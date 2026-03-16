@@ -31,6 +31,11 @@ jobs:
           components: clippy, rustfmt
           bins: cargo-udeps,cargo-tarpaulin
 
+      - name: Install ALSA development files
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
+
       - name: Run format
         run: cargo fmt --all -- --check
 
