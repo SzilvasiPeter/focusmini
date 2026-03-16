@@ -1,13 +1,9 @@
 # focusmini
 
-Focusmini is a compact Pomodoro CLI that alternates between work and break intervals while triggering an audio cue on each transition.
+Focusmini is a compact Pomodoro CLI that alternates between work and break intervals while playing a short beep pattern on each transition.
 
-> [!NOTE]
-> The CLI plays a sound with `paplay` on each transition. Use `--sound none` to disable it or set a custom sound with `--sound <path>`.
-
-- ~100 LOC production code
-- small < 500 KiB release binary
-- no external dependencies (std-only)
+- compact codebase
+- minimal dependencies (uses `rodio` for audio cues)
 - zero unsafe code, >90% test [coverage](https://szilvasipeter.github.io/focusmini/coverage/index.html)
 
 ## Install
@@ -26,7 +22,7 @@ cargo install focusmini
 
 ## Usage
 
-Run the `focusmini` with the deafult values or change them with options:
+Run the `focusmini` with the default values or change them with options:
 
 ```
 Usage: focusmini [OPTIONS]
@@ -34,7 +30,6 @@ Usage: focusmini [OPTIONS]
 Options:
   -w, --work <work_minutes>     Work interval length in minutes [default: 60]
   -b, --break <break_minutes>   Break interval length in minutes [default: 10]
-  -s, --sound <path>            Sound file path or `none` to disable [default: /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga]
 ```
 
 ## Commands

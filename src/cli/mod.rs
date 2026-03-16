@@ -2,12 +2,12 @@
 #[cfg(test)]
 mod tests;
 
-use std::io::{self, BufRead, Write, stdout};
-use std::process::Command;
+use rodio::Source;
+use rodio::source::SquareWave;
+
+use std::io::{self, BufRead, Error, Write, stdout};
 use std::thread::sleep;
 use std::time::Duration;
-
-use crate::DEFAULT_SOUND;
 
 #[cfg(feature = "fast-tick")]
 const TICK_DURATION: Duration = Duration::ZERO;
@@ -15,26 +15,22 @@ const TICK_DURATION: Duration = Duration::ZERO;
 #[cfg(not(feature = "fast-tick"))]
 const TICK_DURATION: Duration = Duration::from_secs(1);
 
-pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16, String), String> {
+pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     let mut work = 60;
     let mut rest = 10;
-    let mut sound = DEFAULT_SOUND.to_string();
 
     while let Some(flag) = args.next() {
         match flag.as_str() {
             "-w" | "--work" => work = parse_value(&flag, &mut args)?,
             "-b" | "--break" => rest = parse_value(&flag, &mut args)?,
-            "-s" | "--sound" => {
-                sound = args.next().ok_or_else(|| format!("no value for {flag}"))?;
-            }
             _ => return Err(format!("unknown flag {flag}")),
         }
     }
 
-    Ok((work, rest, sound))
+    Ok((work, rest))
 }
 
-pub fn run(work: u16, brk: u16, sound: &str, input: &mut dyn BufRead) -> io::Result<()> {
+pub fn run(work: u16, brk: u16, input: &mut dyn BufRead) -> io::Result<()> {
     let work_secs = work * 60;
     let break_secs = brk * 60;
     let work_session = ("\x1b[32m [Work] \x1b[0m", work_secs);
@@ -43,7 +39,7 @@ pub fn run(work: u16, brk: u16, sound: &str, input: &mut dyn BufRead) -> io::Res
     let mut input_line = String::new();
     for (label, seconds) in [work_session, break_session].into_iter().cycle() {
         countdown(label, seconds)?;
-        play_sound(sound)?;
+        let _player_guard = play_sound()?;
 
         print_flush("\r \x1b[1m Enter\x1b[0m to continue (\x1b[1mq\x1b[0m to quit): ")?;
         input_line.clear();
@@ -81,12 +77,29 @@ fn countdown(label: &str, seconds: u16) -> io::Result<()> {
     Ok(())
 }
 
-fn play_sound(sound: &str) -> io::Result<()> {
-    if sound == "none" {
-        return Ok(());
-    }
-    let _ = Command::new("paplay").arg(sound).status()?;
-    Ok(())
+fn play_sound() -> io::Result<rodio::MixerDeviceSink> {
+    let mut stream = rodio::DeviceSinkBuilder::open_default_sink().map_err(Error::other)?;
+    stream.log_on_drop(false);
+    let mixer = stream.mixer();
+
+    let beep = Duration::from_millis(120);
+    let gap = Duration::from_millis(80);
+    let pause = Duration::from_millis(350);
+    let step = beep + gap;
+
+    let beep = |delay: Duration| {
+        SquareWave::new(880.0)
+            .amplify(0.3)
+            .take_duration(beep)
+            .delay(delay)
+    };
+
+    mixer.add(beep(Duration::ZERO));
+    mixer.add(beep(step));
+    mixer.add(beep(step + step + pause));
+    mixer.add(beep(step + step + pause + step));
+
+    Ok(stream)
 }
 
 fn print_flush(text: &str) -> io::Result<()> {

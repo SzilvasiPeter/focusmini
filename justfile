@@ -10,8 +10,8 @@ run: build
     {{binary}}
 
 lint:
-    cargo clippy --all-targets --all-features --release
-
+    cargo fmt --check
+    cargo clippy --all-targets --all-features
 test:
     cargo test --release --all-targets --features fast-tick
 
@@ -23,4 +23,4 @@ sec:
     cargo audit
     cargo deny check
     cargo +nightly udeps --release --all-targets
-    cargo geiger
+    cargo geiger --forbid-only

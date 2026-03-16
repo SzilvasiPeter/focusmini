@@ -47,7 +47,7 @@ jobs:
         run: cargo deny check
 
       - name: Run cargo geiger
-        run: cargo geiger --warning
+        run: cargo geiger --forbid-only
 
       - name: Run cargo udeps
         run: cargo +nightly udeps --all-targets

@@ -1,5 +1,3 @@
-use crate::DEFAULT_SOUND;
-
 use super::{countdown, parse_args, parse_value, print_flush, run};
 use std::io::Cursor;
 
@@ -9,23 +7,25 @@ fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
 
 #[test]
 fn parse_args_defaults() {
-    assert_eq!(
-        parse_args(args(&[])).unwrap(),
-        (60, 10, DEFAULT_SOUND.to_string())
-    );
+    assert_eq!(parse_args(args(&[])).unwrap(), (60, 10));
 }
 
 #[test]
 fn parse_args_custom_values() {
-    assert_eq!(
-        parse_args(args(&["-w", "25", "-b", "5"])).unwrap(),
-        (25, 5, DEFAULT_SOUND.to_string())
-    );
+    assert_eq!(parse_args(args(&["-w", "25", "-b", "5"])).unwrap(), (25, 5));
 }
 
 #[test]
 fn parse_args_missing_value_error() {
     assert_eq!(parse_args(args(&["-w"])).unwrap_err(), "no value for -w");
+}
+
+#[test]
+fn parse_args_long_flags() {
+    assert_eq!(
+        parse_args(args(&["--work", "15", "--break", "7"])).unwrap(),
+        (15, 7)
+    );
 }
 
 fn arg(value: &str) -> impl Iterator<Item = String> + '_ {
@@ -47,22 +47,6 @@ fn parse_value_too_big_number() {
     assert_eq!(
         parse_value("--work", &mut values).unwrap_err(),
         "--work value should be between 1 and 1080 minutes"
-    );
-}
-
-#[test]
-fn parse_args_long_flags() {
-    assert_eq!(
-        parse_args(args(&["--work", "15", "--break", "7"])).unwrap(),
-        (15, 7, DEFAULT_SOUND.to_string())
-    );
-}
-
-#[test]
-fn parse_args_sound_flag() {
-    assert_eq!(
-        parse_args(args(&["-s", "/tmp/alert.oga"])).unwrap(),
-        (60, 10, "/tmp/alert.oga".to_string())
     );
 }
 
@@ -93,13 +77,13 @@ fn countdown_one_second() {
 #[test]
 fn run_zero_second_no_countdown() {
     let mut input = Cursor::new(b"\nq\n");
-    assert!(run(0, 0, "none", &mut input).is_ok());
+    assert!(run(0, 0, &mut input).is_ok());
 }
 
 #[test]
 fn run_one_second_print_countdown() {
     let mut input = Cursor::new(b"\nq\n");
-    assert!(run(1, 0, "none", &mut input).is_ok());
+    assert!(run(1, 1, &mut input).is_ok());
 }
 
 #[test]

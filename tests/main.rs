@@ -13,8 +13,6 @@ fn happy_path_valid_args() {
         .arg("1")
         .arg("--break")
         .arg("1")
-        .arg("--sound")
-        .arg("none")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
