@@ -4,7 +4,7 @@ Focusmini is a compact Pomodoro CLI that alternates between work and break inter
 
 - compact codebase
 - minimal dependencies (uses `rodio` for audio cues)
-- zero unsafe code, >90% test [coverage](https://szilvasipeter.github.io/focusmini/coverage/index.html)
+- zero unsafe code, test coverage: <https://szilvasipeter.github.io/focusmini/coverage/index.html>
 
 ## Install
 

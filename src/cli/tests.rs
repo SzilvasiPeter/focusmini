@@ -1,5 +1,21 @@
-use super::{countdown, parse_args, parse_value, print_flush, run};
+use super::{SoundPlayer, countdown, parse_args, parse_value, print_flush, run};
 use std::io::Cursor;
+
+struct NoopSoundPlayer;
+
+struct NoopGuard;
+
+impl SoundPlayer for NoopSoundPlayer {
+    type Guard = NoopGuard;
+
+    fn play(&self) -> std::io::Result<Self::Guard> {
+        Ok(NoopGuard)
+    }
+}
+
+fn noop_sound_player() -> NoopSoundPlayer {
+    NoopSoundPlayer
+}
 
 fn args<'a>(values: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
     values.iter().map(std::string::ToString::to_string)
@@ -77,13 +93,15 @@ fn countdown_one_second() {
 #[test]
 fn run_zero_second_no_countdown() {
     let mut input = Cursor::new(b"\nq\n");
-    assert!(run(0, 0, &mut input).is_ok());
+    let sound_player = noop_sound_player();
+    assert!(run(0, 0, &mut input, &sound_player).is_ok());
 }
 
 #[test]
 fn run_one_second_print_countdown() {
-    let mut input = Cursor::new(b"\nq\n");
-    assert!(run(1, 1, &mut input).is_ok());
+    let mut input = Cursor::new(b"\n\nq\n");
+    let sound_player = noop_sound_player();
+    assert!(run(1, 1, &mut input, &sound_player).is_ok());
 }
 
 #[test]

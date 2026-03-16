@@ -2,10 +2,7 @@
 #[cfg(test)]
 mod tests;
 
-use rodio::Source;
-use rodio::source::SquareWave;
-
-use std::io::{self, BufRead, Error, Write, stdout};
+use std::io::{self, BufRead, Write, stdout};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -14,6 +11,11 @@ const TICK_DURATION: Duration = Duration::ZERO;
 
 #[cfg(not(feature = "fast-tick"))]
 const TICK_DURATION: Duration = Duration::from_secs(1);
+
+pub trait SoundPlayer {
+    type Guard;
+    fn play(&self) -> io::Result<Self::Guard>;
+}
 
 pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), String> {
     let mut work = 60;
@@ -30,7 +32,11 @@ pub fn parse_args(mut args: impl Iterator<Item = String>) -> Result<(u16, u16), 
     Ok((work, rest))
 }
 
-pub fn run(work: u16, brk: u16, input: &mut dyn BufRead) -> io::Result<()> {
+pub fn run<I, P>(work: u16, brk: u16, input: &mut I, sound_player: &P) -> io::Result<()>
+where
+    I: BufRead,
+    P: SoundPlayer,
+{
     let work_secs = work * 60;
     let break_secs = brk * 60;
     let work_session = ("\x1b[32m [Work] \x1b[0m", work_secs);
@@ -39,7 +45,7 @@ pub fn run(work: u16, brk: u16, input: &mut dyn BufRead) -> io::Result<()> {
     let mut input_line = String::new();
     for (label, seconds) in [work_session, break_session].into_iter().cycle() {
         countdown(label, seconds)?;
-        let _player_guard = play_sound()?;
+        let _player_guard = sound_player.play()?;
 
         print_flush("\r \x1b[1m Enter\x1b[0m to continue (\x1b[1mq\x1b[0m to quit): ")?;
         input_line.clear();
@@ -75,31 +81,6 @@ fn countdown(label: &str, seconds: u16) -> io::Result<()> {
 
     print_flush(&format!("\r{label} 00:00"))?;
     Ok(())
-}
-
-fn play_sound() -> io::Result<rodio::MixerDeviceSink> {
-    let mut stream = rodio::DeviceSinkBuilder::open_default_sink().map_err(Error::other)?;
-    stream.log_on_drop(false);
-    let mixer = stream.mixer();
-
-    let beep = Duration::from_millis(120);
-    let gap = Duration::from_millis(80);
-    let pause = Duration::from_millis(350);
-    let step = beep + gap;
-
-    let beep = |delay: Duration| {
-        SquareWave::new(880.0)
-            .amplify(0.3)
-            .take_duration(beep)
-            .delay(delay)
-    };
-
-    mixer.add(beep(Duration::ZERO));
-    mixer.add(beep(step));
-    mixer.add(beep(step + step + pause));
-    mixer.add(beep(step + step + pause + step));
-
-    Ok(stream)
 }
 
 fn print_flush(text: &str) -> io::Result<()> {
