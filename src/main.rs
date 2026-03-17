@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
-// TODO: Remove this once the releated issue is resolved: https://github.com/RustAudio/rodio/issues/865
+// TODO: Remove this once the releated issues are resolved:
+// - https://github.com/jni-rs/jni-rs/issues/806
+// - https://github.com/rust-mobile/ndk/issues/514
 #![allow(clippy::multiple_crate_versions)]
 mod cli;
 
